@@ -623,7 +623,7 @@
             setTimeout(function() { document.getElementById("siyerProgress").style.width = percentage + "%"; document.getElementById("progress-text").innerText = "%" + Math.floor(percentage) + " Tamamlandı"; }, 300);
         });
 
-        // --- 👉 YENİ VE GÜNCELLENMİŞ PDF İNDİRME MOTORU ---
+        // --- 👉 YENİ: PDF İNDİRME MOTORU ---
         function indirPDF() {
             var dateStr = document.getElementById('modal-date').innerText;
             var titleStr = document.getElementById('modal-title').innerText;
@@ -632,24 +632,11 @@
             // Dosya ismi için sayfa başlığını değiştiriyoruz
             document.title = titleStr + " (" + dateStr + ")";
             
-            // Mobilde sayfa isminin güncellenmesine zaman tanımak için ufak bir gecikme ekliyoruz
-            setTimeout(function() {
-                // Yazdırma ekranını çağırıyoruz
-                window.print();
-                
-                // Yazdırma penceresi kapanınca/işlem bitince sayfa başlığını eski haline getiriyoruz
-                document.title = originalTitle;
-                
-                // İndirme / Kaydetme ekranı açıldıktan sonra üstte yeşil bildirimi göster
-                var bildirim = document.getElementById("bildirimKutusu");
-                bildirim.style.display = "block";
-                
-                // Bildirimi 3.5 saniye sonra ekrandan gizle
-                setTimeout(function() {
-                    bildirim.style.display = "none";
-                }, 3500);
-                
-            }, 200); // 200 milisaniyelik bu bekleme, mobilde "site ismiyle inme" sorununu çözecektir.
+            // Yazdırma ekranını çağırıyoruz
+            window.print();
+            
+            // Yazdırma bitince sayfa başlığını eski haline getiriyoruz
+            document.title = originalTitle;
         }
 
         // --- 6. GÜNÜN TESTİ VE KONFETİ MOTORU ---
@@ -693,8 +680,5 @@
             }
         }
     </script>
-    <div id="bildirimKutusu" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); background-color:#4CAF50; color:white; padding:15px 20px; border-radius:8px; font-weight:bold; z-index:9999; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
-    ✅ Dosya başarıyla cihaza kaydedildi!
-</div>
 </body>
 </html>
