@@ -180,8 +180,9 @@
 
        /* --- 🖨️ PDF YAZDIRMA (MATBAA) ZEKASI --- */
         @media print {
-            /* 👉 YENİ EKLENEN SİHİR: Tarayıcının tarih, saat ve link basmasını engeller */
             @page { margin: 0; } 
+            html, body { height: auto !important; overflow: visible !important; }
+            /* ... diğer kodlar aynı kalacak ... */
             
             body { background: #fff !important; color: #000 !important; }
             body > *:not(#summaryModal) { display: none !important; }
@@ -624,19 +625,25 @@
         });
 
         // --- 👉 YENİ: PDF İNDİRME MOTORU ---
-        function indirPDF() {
+       function indirPDF() {
             var dateStr = document.getElementById('modal-date').innerText;
             var titleStr = document.getElementById('modal-title').innerText;
             var originalTitle = document.title;
             
-            // Dosya ismi için sayfa başlığını değiştiriyoruz
+            // Dosya ismi için başlığı ayarla
             document.title = titleStr + " (" + dateStr + ")";
             
-            // Yazdırma ekranını çağırıyoruz
-            window.print();
+            // MOBİL ÇÖZÜM: Telefon PDF'i çizebilsin diye arka plan kilidini anlık açıyoruz
+            document.body.style.overflow = 'visible';
             
-            // Yazdırma bitince sayfa başlığını eski haline getiriyoruz
-            document.title = originalTitle;
+            // Telefonun render alması için ufacık bir süre (300 milisaniye) tanıyıp yazdırıyoruz
+            setTimeout(function() {
+                window.print();
+                
+                // İşlem bitince her şeyi eski haline getiriyoruz
+                document.title = originalTitle;
+                document.body.style.overflow = 'hidden';
+            }, 300);
         }
 
         // --- 6. GÜNÜN TESTİ VE KONFETİ MOTORU ---
