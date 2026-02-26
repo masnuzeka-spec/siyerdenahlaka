@@ -180,9 +180,8 @@
 
        /* --- 🖨️ PDF YAZDIRMA (MATBAA) ZEKASI --- */
         @media print {
+            /* 👉 YENİ EKLENEN SİHİR: Tarayıcının tarih, saat ve link basmasını engeller */
             @page { margin: 0; } 
-            html, body { height: auto !important; overflow: visible !important; }
-            /* ... diğer kodlar aynı kalacak ... */
             
             body { background: #fff !important; color: #000 !important; }
             body > *:not(#summaryModal) { display: none !important; }
@@ -624,26 +623,33 @@
             setTimeout(function() { document.getElementById("siyerProgress").style.width = percentage + "%"; document.getElementById("progress-text").innerText = "%" + Math.floor(percentage) + " Tamamlandı"; }, 300);
         });
 
-        // --- 👉 YENİ: PDF İNDİRME MOTORU ---
-       function indirPDF() {
+        // --- 👉 YENİ VE GÜNCELLENMİŞ PDF İNDİRME MOTORU ---
+        function indirPDF() {
             var dateStr = document.getElementById('modal-date').innerText;
             var titleStr = document.getElementById('modal-title').innerText;
             var originalTitle = document.title;
             
-            // Dosya ismi için başlığı ayarla
+            // Dosya ismi için sayfa başlığını değiştiriyoruz
             document.title = titleStr + " (" + dateStr + ")";
             
-            // MOBİL ÇÖZÜM: Telefon PDF'i çizebilsin diye arka plan kilidini anlık açıyoruz
-            document.body.style.overflow = 'visible';
-            
-            // Telefonun render alması için ufacık bir süre (300 milisaniye) tanıyıp yazdırıyoruz
+            // Mobilde sayfa isminin güncellenmesine zaman tanımak için ufak bir gecikme ekliyoruz
             setTimeout(function() {
+                // Yazdırma ekranını çağırıyoruz
                 window.print();
                 
-                // İşlem bitince her şeyi eski haline getiriyoruz
+                // Yazdırma penceresi kapanınca/işlem bitince sayfa başlığını eski haline getiriyoruz
                 document.title = originalTitle;
-                document.body.style.overflow = 'hidden';
-            }, 300);
+                
+                // İndirme / Kaydetme ekranı açıldıktan sonra üstte yeşil bildirimi göster
+                var bildirim = document.getElementById("bildirimKutusu");
+                bildirim.style.display = "block";
+                
+                // Bildirimi 3.5 saniye sonra ekrandan gizle
+                setTimeout(function() {
+                    bildirim.style.display = "none";
+                }, 3500);
+                
+            }, 200); // 200 milisaniyelik bu bekleme, mobilde "site ismiyle inme" sorununu çözecektir.
         }
 
         // --- 6. GÜNÜN TESTİ VE KONFETİ MOTORU ---
@@ -687,5 +693,8 @@
             }
         }
     </script>
+    <div id="bildirimKutusu" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); background-color:#4CAF50; color:white; padding:15px 20px; border-radius:8px; font-weight:bold; z-index:9999; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+    ✅ Dosya başarıyla cihaza kaydedildi!
+</div>
 </body>
 </html>
