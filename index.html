@@ -699,10 +699,10 @@
     </script>
    <style>
     .d-arka { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; justify-content: center; align-items: center; animation: fadeIn 0.4s; backdrop-filter: blur(5px); }
-    .d-kutu { background: #2c2117; border: 2px solid #e2b973; border-radius: 12px; padding: 25px; width: 85%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.9); }
+    .d-kutu { background: #2c2117; border: 2px solid #e2b973; border-radius: 12px; padding: 25px; width: 85%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.9); max-height: 80vh; overflow-y: auto; }
     .d-bas { color: #e2b973; font-family: 'Cinzel', serif; font-size: 1.5rem; margin-top: 0; margin-bottom: 15px; border-bottom: 1px dashed rgba(226,185,115,0.3); padding-bottom: 10px; }
-    .d-metin { color: #e8ded1; font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px; }
-    .d-kapat { background: #e2b973; color: #2c2117; border: none; padding: 12px 20px; font-weight: bold; font-family: 'Cinzel', serif; font-size: 1.1rem; border-radius: 8px; cursor: pointer; width: 100%; transition: opacity 0.3s; }
+    .d-metin { color: #e8ded1; font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px; text-align: left; }
+    .d-kapat { background: #e2b973; color: #2c2117; border: none; padding: 12px 20px; font-weight: bold; font-family: 'Cinzel', serif; font-size: 1.1rem; border-radius: 8px; cursor: pointer; width: 100%; transition: opacity 0.3s; margin-top: 10px; }
     .d-kapat:hover { opacity: 0.8; }
 </style>
 
@@ -712,55 +712,65 @@
         
         <div class="d-metin" id="d-dinamik-metin">Yükleniyor...</div>
         
-        <button class="d-kapat" onclick="
-            var kutu = document.getElementById('k-duyuru');
-            localStorage.setItem('kHafiza', kutu.getAttribute('data-id'));
-            kutu.style.display = 'none';
-        ">Okudum, Anladım</button>
+        <button class="d-kapat" onclick="duyuruyuKapat()">Okudum, Anladım</button>
     </div>
 </div>
 
 <script>
-    // 👑 2. ADIMDA ALDIĞIN LİNKİ BURAYA YAPIŞTIR:
+    // 👑 LİNKİNİ AŞAĞIYA YAPIŞTIR:
     const DUYURU_LINKI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRUf9XXzSF12ICpSsLKPskW1MFOsaTfD5T8gmQbAD68zLp7UeVlNGPJ7Jv2IIZh1vFLTZgaCjGFP15F/pub?gid=580897210&single=true&output=tsv";
 
-    if(DUYURU_LINKI && DUYURU_LINKI !== "BURAYA_LİNKİ_YAPIŞTIR") {
+    // 🛡️ KRAL TSV ÇÖZÜCÜ: HTML, Enter, Çift Tırnak dinlemez, hepsini kusursuz parçalar!
+    function kralTsvCozucu(metin) {
+        let satirlar = []; let hucreler = []; let hucre = ''; let tirnakIcinde = false;
+        for (let i = 0; i < metin.length; i++) {
+            let c = metin[i];
+            if (c === '"') {
+                if (tirnakIcinde && metin[i+1] === '"') { hucre += '"'; i++; }
+                else { tirnakIcinde = !tirnakIcinde; }
+            } else if (c === '\t' && !tirnakIcinde) {
+                hucreler.push(hucre); hucre = '';
+            } else if ((c === '\n' || c === '\r') && !tirnakIcinde) {
+                if (c === '\r' && metin[i+1] === '\n') i++;
+                hucreler.push(hucre); satirlar.push(hucreler); hucreler = []; hucre = '';
+            } else { hucre += c; }
+        }
+        if (hucre !== '' || hucreler.length > 0) { hucreler.push(hucre); satirlar.push(hucreler); }
+        return satirlar;
+    }
+
+    if(DUYURU_LINKI && DUYURU_LINKI !== "BURAYA_LINKI_YAPISTIR") {
         fetch(DUYURU_LINKI)
             .then(res => res.text())
             .then(data => {
-                try {
-                    let temizData = data.replace(/\r/g, ""); 
-                    let satirlar = temizData.split('\n').filter(s => s.trim() !== ""); 
+                let tablo = kralTsvCozucu(data);
+                
+                if(tablo.length > 1) {
+                    // Excel'in en altındaki son duyuruyu bul (Boş satırları atla)
+                    let sonSatir = tablo[tablo.length - 1];
+                    if(sonSatir.length < 2 && tablo.length > 2) sonSatir = tablo[tablo.length - 2];
                     
-                    if(satirlar.length > 1) {
-                        // En son yazılan güncel duyuruyu baz al (Son Satır)
-                        let sonSatir = satirlar[satirlar.length - 1];
-                        let sutunlar = sonSatir.split('\t'); 
+                    if(sonSatir.length >= 2) {
+                        let duyuruNo = "DUYURU_" + sonSatir.trim();
+                        let duyuruMetni = sonSatir.trim();
+                        let okunanDuyuru = localStorage.getItem('kHafiza');
                         
-                        if(sutunlar.length >= 2) {
-                            let duyuruNo = "DUYURU_" + sutunlar.trim();
-                            let duyuruMetni = sutunlar.trim();
-                            
-                            // AppSheet'in eklediği koruyucu çift tırnakları ve gereksiz boşlukları yok et
-                            if(duyuruMetni.startsWith('"') && duyuruMetni.endsWith('"')) {
-                                duyuruMetni = duyuruMetni.substring(1, duyuruMetni.length - 1);
-                                // Excel'in HTML tırnaklarını bozmasını düzelt (Çift tırnakları tek tırnağa çevir)
-                                duyuruMetni = duyuruMetni.replace(/""/g, '"'); 
-                            }
-                            
-                            let okunanDuyuru = localStorage.getItem('kHafiza');
-                            
-                            // Ekrana Şak Diye Bas!
-                            if(okunanDuyuru !== duyuruNo) {
-                                document.getElementById('d-dinamik-metin').innerHTML = duyuruMetni;
-                                document.getElementById('k-duyuru').setAttribute('data-id', duyuruNo);
-                                document.getElementById('k-duyuru').style.display = 'flex';
-                            }
+                        // Numara değişmişse EKRANA ŞAK DİYE BAS
+                        if(duyuruNo !== "DUYURU_" && okunanDuyuru !== duyuruNo && duyuruMetni !== "") {
+                            document.getElementById('d-dinamik-metin').innerHTML = duyuruMetni;
+                            document.getElementById('k-duyuru').setAttribute('data-id', duyuruNo);
+                            document.getElementById('k-duyuru').style.display = 'flex';
                         }
                     }
-                } catch(e) { console.log("Veri işleme hatası: ", e); }
+                }
             })
             .catch(err => console.log('Bağlantı hatası:', err));
+    }
+
+    function duyuruyuKapat() {
+        var kutu = document.getElementById('k-duyuru');
+        localStorage.setItem('kHafiza', kutu.getAttribute('data-id'));
+        kutu.style.display = 'none';
     }
 </script>
 </body>
