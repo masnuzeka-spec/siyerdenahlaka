@@ -699,65 +699,68 @@
     </script>
    <style>
     .d-arka { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; justify-content: center; align-items: center; animation: fadeIn 0.4s; backdrop-filter: blur(5px); }
-    .d-kutu { background: var(--bg-dark, #2c2117); border: 2px solid var(--text-gold, #e2b973); border-radius: 12px; padding: 25px; width: 85%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.9); }
-    .d-bas { color: var(--text-gold, #e2b973); font-family: 'Cinzel', serif; font-size: 1.5rem; margin-top: 0; margin-bottom: 15px; border-bottom: 1px dashed rgba(226,185,115,0.3); padding-bottom: 10px; }
-    .d-metin { color: var(--text-light, #e8ded1); font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px; }
-    .d-kapat { background: var(--text-gold, #e2b973); color: var(--bg-dark, #2c2117); border: none; padding: 12px 20px; font-weight: bold; font-family: 'Cinzel', serif; font-size: 1.1rem; border-radius: 8px; cursor: pointer; width: 100%; }
+    .d-kutu { background: #2c2117; border: 2px solid #e2b973; border-radius: 12px; padding: 25px; width: 85%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.9); }
+    .d-bas { color: #e2b973; font-family: 'Cinzel', serif; font-size: 1.5rem; margin-top: 0; margin-bottom: 15px; border-bottom: 1px dashed rgba(226,185,115,0.3); padding-bottom: 10px; }
+    .d-metin { color: #e8ded1; font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px; }
+    .d-kapat { background: #e2b973; color: #2c2117; border: none; padding: 12px 20px; font-weight: bold; font-family: 'Cinzel', serif; font-size: 1.1rem; border-radius: 8px; cursor: pointer; width: 100%; transition: opacity 0.3s; }
+    .d-kapat:hover { opacity: 0.8; }
 </style>
 
 <div id="k-duyuru" class="d-arka" data-id="">
     <div class="d-kutu">
         <h3 class="d-bas">📢 DUYURU</h3>
-        <p class="d-metin" id="d-dinamik-metin">Yükleniyor...</p>
-        <button class="d-kapat" onclick="duyuruyuKapat()">Okudum, Anladım</button>
+        
+        <div class="d-metin" id="d-dinamik-metin">Yükleniyor...</div>
+        
+        <button class="d-kapat" onclick="
+            var kutu = document.getElementById('k-duyuru');
+            localStorage.setItem('kHafiza', kutu.getAttribute('data-id'));
+            kutu.style.display = 'none';
+        ">Okudum, Anladım</button>
     </div>
 </div>
 
 <script>
-    // 👑 LİNKİNİ BURAYA YAPIŞTIR:
+    // 👑 2. ADIMDA ALDIĞIN LİNKİ BURAYA YAPIŞTIR:
     const DUYURU_LINKI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRUf9XXzSF12ICpSsLKPskW1MFOsaTfD5T8gmQbAD68zLp7UeVlNGPJ7Jv2IIZh1vFLTZgaCjGFP15F/pub?gid=580897210&single=true&output=tsv";
 
-    // RADAR 1: Kod sitemizde aktif mi?
-    alert("RADAR 1: Motor çalıştı! Vercel güncellemeyi almış.");
-
-    if(DUYURU_LINKI && DUYURU_LINKI !== "BURAYA_LINKI_YAPISTIR") {
+    if(DUYURU_LINKI && DUYURU_LINKI !== "BURAYA_LİNKİ_YAPIŞTIR") {
         fetch(DUYURU_LINKI)
             .then(res => res.text())
             .then(data => {
-                // RADAR 2: Excelden veri geldi mi?
-                alert("RADAR 2: Excel'den Veri Geldi!\n\nGelen Veri: " + data.substring(0, 50) + "...");
-                
-                let temizData = data.replace(/\r/g, ""); 
-                let satirlar = temizData.split('\n').filter(s => s.trim() !== ""); 
-                
-                // Boşlukları atlayıp direkt içinde veri olan satırı buluyoruz (Kesin çözüm)
-                for(let i = 1; i < satirlar.length; i++) {
-                    let sutunlar = satirlar[i].split('\t'); 
-                    if(sutunlar.length >= 2 && sutunlar.trim() !== "") {
-                        let duyuruNo = "DUYURU_" + sutunlar.trim();
-                        let duyuruMetni = sutunlar.trim().replace(/^"|"$/g, '');
-                        let okunanDuyuru = localStorage.getItem('kHafiza');
+                try {
+                    let temizData = data.replace(/\r/g, ""); 
+                    let satirlar = temizData.split('\n').filter(s => s.trim() !== ""); 
+                    
+                    if(satirlar.length > 1) {
+                        // En son yazılan güncel duyuruyu baz al (Son Satır)
+                        let sonSatir = satirlar[satirlar.length - 1];
+                        let sutunlar = sonSatir.split('\t'); 
                         
-                        alert("RADAR 3: Numara Kontrolü!\nExceldeki No: " + duyuruNo + "\nHafızadaki No: " + okunanDuyuru);
-                        
-                        if(okunanDuyuru !== duyuruNo) {
-                            document.getElementById('d-dinamik-metin').innerHTML = duyuruMetni;
-                            document.getElementById('k-duyuru').setAttribute('data-id', duyuruNo);
-                            document.getElementById('k-duyuru').style.display = 'flex';
+                        if(sutunlar.length >= 2) {
+                            let duyuruNo = "DUYURU_" + sutunlar.trim();
+                            let duyuruMetni = sutunlar.trim();
+                            
+                            // AppSheet'in eklediği koruyucu çift tırnakları ve gereksiz boşlukları yok et
+                            if(duyuruMetni.startsWith('"') && duyuruMetni.endsWith('"')) {
+                                duyuruMetni = duyuruMetni.substring(1, duyuruMetni.length - 1);
+                                // Excel'in HTML tırnaklarını bozmasını düzelt (Çift tırnakları tek tırnağa çevir)
+                                duyuruMetni = duyuruMetni.replace(/""/g, '"'); 
+                            }
+                            
+                            let okunanDuyuru = localStorage.getItem('kHafiza');
+                            
+                            // Ekrana Şak Diye Bas!
+                            if(okunanDuyuru !== duyuruNo) {
+                                document.getElementById('d-dinamik-metin').innerHTML = duyuruMetni;
+                                document.getElementById('k-duyuru').setAttribute('data-id', duyuruNo);
+                                document.getElementById('k-duyuru').style.display = 'flex';
+                            }
                         }
-                        break; // Veriyi bulduk, döngüyü durdur.
                     }
-                }
+                } catch(e) { console.log("Veri işleme hatası: ", e); }
             })
-            .catch(err => alert("RADAR HATA: Bağlantı kurulamadı! Hata: " + err));
-    } else {
-        alert("RADAR HATA: Linki koda yapıştırmayı unutmuşsun kral!");
-    }
-
-    function duyuruyuKapat() {
-        var kutu = document.getElementById('k-duyuru');
-        localStorage.setItem('kHafiza', kutu.getAttribute('data-id')); 
-        kutu.style.display = 'none'; 
+            .catch(err => console.log('Bağlantı hatası:', err));
     }
 </script>
 </body>
