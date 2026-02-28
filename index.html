@@ -218,10 +218,11 @@
         }
     </style>
     <style>
+.kral-sekme-alan { touch-action: pan-y; overflow-x: hidden; position: relative; width: 100%; }
 .k-btn{flex:1;background:transparent;border:none;border-bottom:3px solid rgba(226,185,115,0.2);color:#a38a70;padding:15px 5px;font-family:'Cinzel',serif;font-size:1.1rem;cursor:pointer;transition:all 0.3s;font-weight:bold}
 .k-btn:hover{color:var(--text-gold, #e2b973);background:rgba(226,185,115,0.05)}
 .k-btn.aktif{color:var(--text-gold, #e2b973);border-bottom:3px solid var(--text-gold, #e2b973);background:rgba(226,185,115,0.1)}
-.k-ic{display:none;padding-top:25px;animation:fadeIn 0.5s}
+.k-ic{display:none;padding-top:25px;animation:fadeIn 0.4s ease-out}
 .k-ic.aktif{display:block}
 .u-o{list-style-type:none;padding-left:0;line-height:1.8}
 .u-o li{margin-bottom:12px}
@@ -231,7 +232,7 @@
 .secenek{display:block;margin-bottom:8px}
 .a-kutu{background:rgba(226,185,115,0.08);padding:20px;border-radius:10px;border:1px dashed var(--text-gold, #e2b973)}
 @media screen and (max-width:768px){.k-btn{font-size:0.85rem;padding:10px 2px}.a-kutu{padding:12px}}
-@keyframes fadeIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
+@keyframes fadeIn{from{opacity:0;transform:translateX(15px)}to{opacity:1;transform:translateX(0)}}
 </style>
 </head>
 <body>
@@ -777,46 +778,43 @@
     }
 </script>
 <script>
+document.addEventListener('DOMContentLoaded', () => {
     let k_startX = 0;
     let k_startY = 0;
-    
-    // Ekrana ilk dokunulan an
-    document.addEventListener('touchstart', function(e) {
-        k_startX = e.changedTouches.screenX;
-        k_startY = e.changedTouches.screenY;
+
+    document.addEventListener('touchstart', (e) => {
+        k_startX = e.touches.clientX;
+        k_startY = e.touches.clientY;
     }, {passive: true});
 
-    // Parmak ekrandan kalktığı an
-    document.addEventListener('touchend', function(e) {
-        let k_endX = e.changedTouches.screenX;
-        let k_endY = e.changedTouches.screenY;
-        
-        // Parmağın ne kadar sağa/sola ve aşağı/yukarı gittiğini hesapla
+    document.addEventListener('touchend', (e) => {
+        let k_endX = e.changedTouches.clientX;
+        let k_endY = e.changedTouches.clientY;
+
         let farkX = k_startX - k_endX;
         let farkY = k_startY - k_endY;
-        
-        // 👑 KRAL DOKUNUŞ: Eğer dikey kaydırma (okuma), yatay kaydırmadan büyükse İPTAL ET.
-        // Bu sayede adam metni okurken yanlışlıkla sekme değişmez.
-        if (Math.abs(farkY) > Math.abs(farkX)) return; 
-        
-        // Sadece bizim ders kutusunun içinde mi kaydırdı kontrol et
-        let alan = e.target.closest('.kral-sekme-alan');
-        
-        if(alan) {
-            let hassasiyet = 45; // Telefon ekranında hafif bir parmak darbesi yeterli
-            let butonlar = Array.from(alan.querySelectorAll('.k-btn'));
-            let aktifSira = butonlar.findIndex(b => b.classList.contains('aktif'));
 
-            // Sola Kaydırma (Bir sonraki sekmeye geç)
-            if(farkX > hassasiyet) { 
-                if(aktifSira < butonlar.length - 1) butonlar[aktifSira + 1].click();
-            } 
-            // Sağa Kaydırma (Bir önceki sekmeye dön)
-            else if(farkX < -hassasiyet) { 
-                if(aktifSira > 0) butonlar[aktifSira - 1].click();
-            }
+        // EĞER AŞAĞI/YUKARI KAYDIRMA DAHA BÜYÜKSE HİÇBİR ŞEY YAPMA (Sayfayı okuyordur)
+        if (Math.abs(farkY) > Math.abs(farkX)) return;
+
+        // KAYDIRMA ÇOK HAFİFSE İŞLEM YAPMA (Yanlışlıkla dokunmuştur)
+        if (Math.abs(farkX) < 40) return;
+
+        let alan = e.target.closest('.kral-sekme-alan');
+        if (!alan) return;
+
+        let butonlar = Array.from(alan.querySelectorAll('.k-btn'));
+        let aktifSira = butonlar.findIndex(b => b.classList.contains('aktif'));
+
+        if (farkX > 0) { 
+            // PARMAK SOLA KAYDI (İleri - Sağdaki Sekmeye Geç)
+            if (aktifSira < butonlar.length - 1) butonlar[aktifSira + 1].click();
+        } else { 
+            // PARMAK SAĞA KAYDI (Geri - Soldaki Sekmeye Geç)
+            if (aktifSira > 0) butonlar[aktifSira - 1].click();
         }
     }, {passive: true});
+});
 </script>
 </body>
 </html>
