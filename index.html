@@ -697,58 +697,40 @@
             }
         }
     </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
-<style>
-    .d-arka { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(8px); animation: fadeIn 0.4s; }
-    .d-kutu { background: var(--bg-dark, #2c2117); border: 2px solid var(--text-gold, #e2b973); border-radius: 15px; padding: 25px; width: 90%; max-width: 450px; text-align: left; box-shadow: 0 15px 40px rgba(0,0,0,0.8); max-height: 85vh; overflow-y: auto; position: relative; }
-    .d-bas { color: var(--text-gold, #e2b973); font-family: 'Cinzel', serif; font-size: 1.4rem; margin-top: 0; margin-bottom: 20px; text-align: center; border-bottom: 1px dashed rgba(226,185,115,0.3); padding-bottom: 10px; }
-    .d-metin { color: var(--text-light, #e8ded1); font-size: 1.05rem; line-height: 1.6; margin-bottom: 25px; font-family: 'Open Sans', sans-serif; }
-    .d-kapat { background: var(--text-gold, #e2b973); color: var(--bg-dark, #2c2117); border: none; padding: 15px; font-weight: bold; font-family: 'Cinzel', serif; font-size: 1.1rem; border-radius: 10px; cursor: pointer; width: 100%; transition: all 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-    .d-kapat:hover { background: #cda25e; transform: translateY(-2px); }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-</style>
-
-<div id="k-duyuru" class="d-arka" data-id="">
-    <div class="d-kutu">
-        <h3 class="d-bas">📢 DUYURU</h3>
-        <div class="d-metin" id="d-dinamik-metin">Duyuru yükleniyor...</div>
-        <button class="d-kapat" onclick="duyuruyuKapat()">Okudum, Anladım</button>
-    </div>
+  <div id="rontgen-ekrani" style="position:fixed; top:5%; left:5%; width:90%; max-height:80vh; background:#fff; border:5px solid #d9534f; z-index:999999; padding:20px; overflow-y:auto; color:#000; font-family:sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    <h2 style="color:#d9534f; margin-top:0; border-bottom:2px solid #ccc; padding-bottom:10px;">🛠️ SİSTEM RÖNTGENİ</h2>
+    <ol id="rontgen-liste" style="font-size:16px; line-height:1.8; font-weight:bold;"></ol>
 </div>
 
 <script>
-    // 👑 KRALIN ÖZEL LİNKİ BURAYA GÖMÜLDÜ (Dersleri bozmaz, sadece duyuruyu çeker)
-    const DUYURU_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRUf9XXzSF12ICpSsLKPskW1MFOsaTfD5T8gmQbAD68zLp7UeVlNGPJ7Jv2IIZh1vFLTZgaCjGFP15F/pub?gid=580897210&single=true&output=csv";
-
-    // PapaParse ile mermi gibi HTML okuma motoru
-    Papa.parse(DUYURU_CSV_URL, {
-        download: true,
-        header: false,
-        complete: function(results) {
-            let satirlar = results.data.filter(row => row.length >= 2 && row.trim() !== "");
-            
-            if(satirlar.length > 1) { 
-                let sonSatir = satirlar[satirlar.length - 1];
-                let dNo = "D_" + sonSatir.trim();
-                let dMetin = sonSatir; 
-                let okunan = localStorage.getItem('kHafiza');
-                
-                if(okunan !== dNo && dNo !== "D_DuyuruNo") {
-                    document.getElementById('d-dinamik-metin').innerHTML = dMetin;
-                    document.getElementById('k-duyuru').setAttribute('data-id', dNo);
-                    document.getElementById('k-duyuru').style.display = 'flex';
-                }
-            }
-        },
-        error: function(err) { console.log("Duyuru çekilemedi:", err); }
-    });
-
-    function duyuruyuKapat() {
-        const dNo = document.getElementById('k-duyuru').getAttribute('data-id');
-        localStorage.setItem('kHafiza', dNo);
-        document.getElementById('k-duyuru').style.display = 'none';
+    const liste = document.getElementById('rontgen-liste');
+    function yaz(mesaj, renk="black") {
+        liste.innerHTML += `<li style="color:${renk}; margin-bottom:10px;">${mesaj}</li>`;
     }
+
+    yaz("Vercel yeni kodları güncelledi. Motor çalışıyor!", "green");
+    
+    // Senin verdiğin o orijinal duyuru linki
+    const testLink = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRUf9XXzSF12ICpSsLKPskW1MFOsaTfD5T8gmQbAD68zLp7UeVlNGPJ7Jv2IIZh1vFLTZgaCjGFP15F/pub?gid=580897210&single=true&output=csv";
+    
+    yaz("Google'ın kapısı çalınıyor...", "black");
+
+    fetch(testLink)
+        .then(res => {
+            yaz("Google cevap verdi! Durum Kodu: " + res.status, "blue");
+            return res.text();
+        })
+        .then(data => {
+            yaz("Veri başarıyla indirildi!", "green");
+            yaz("📥 GELEN VERİNİN İLK KISMI:<br><pre style='background:#eee; padding:10px; border:1px dashed #ccc; white-space:pre-wrap; font-size:14px; color:#333; font-weight:normal;'>\n" + data.substring(0, 200).replace(/</g, "&lt;") + "\n</pre>", "purple");
+            
+            // Telefonun hafızasını kontrol edelim, belki de okundu sanıyor
+            let hafiza = localStorage.getItem('kHafiza');
+            yaz("🧠 Telefonun Hafızasındaki Numara: " + (hafiza ? hafiza : "HAFIZA BOŞ (İlk defa girilmiş)"), "orange");
+        })
+        .catch(err => {
+            yaz("❌ KRİTİK HATA: Google bağlantıyı reddetti! Sebep: " + err.message, "red");
+        });
 </script>
 </body>
 </html>
