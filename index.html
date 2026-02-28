@@ -697,50 +697,57 @@
             }
         }
     </script>
-   <style>
-    .d-arka { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
-    .d-kutu { background: #2c2117; border: 2px solid #e2b973; border-radius: 15px; padding: 25px; width: 85%; max-width: 400px; text-align: left; box-shadow: 0 15px 40px rgba(0,0,0,0.8); }
-    .d-bas { color: #e2b973; font-family: 'Cinzel', serif; font-size: 1.4rem; margin-bottom: 15px; text-align: center; border-bottom: 1px dashed rgba(226,185,115,0.3); padding-bottom: 10px; }
-    .d-metin { color: #e8ded1; font-size: 1.05rem; line-height: 1.6; white-space: pre-wrap; margin-bottom: 20px; max-height: 50vh; overflow-y: auto; }
-    .d-kapat { background: #e2b973; color: #2c2117; border: none; padding: 15px; font-weight: bold; font-family: 'Cinzel', serif; font-size: 1.1rem; border-radius: 10px; cursor: pointer; width: 100%; }
+  <style>
+    .d-arka { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(8px); animation: fadeIn 0.4s; }
+    .d-kutu { background: #2c2117; border: 2px solid #e2b973; border-radius: 15px; padding: 25px; width: 85%; max-width: 450px; text-align: left; box-shadow: 0 15px 40px rgba(0,0,0,0.8); max-height: 80vh; overflow-y: auto; }
+    .d-bas { color: #e2b973; font-family: 'Cinzel', serif; font-size: 1.4rem; margin-bottom: 20px; text-align: center; border-bottom: 1px dashed rgba(226,185,115,0.3); padding-bottom: 10px; }
+    .d-metin { color: #e8ded1; font-size: 1.05rem; line-height: 1.6; margin-bottom: 25px; }
+    .d-kapat { background: #e2b973; color: #2c2117; border: none; padding: 15px; font-weight: bold; font-family: 'Cinzel', serif; font-size: 1.1rem; border-radius: 10px; cursor: pointer; width: 100%; transition: all 0.3s; }
+    .d-kapat:hover { opacity: 0.8; transform: scale(0.98); }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 
 <div id="k-duyuru" class="d-arka">
     <div class="d-kutu">
-        <h3 class="d-bas">📢 DUYURU</h3>
+        <h3 class="d-bas">📢  DUYURU</h3>
         <div class="d-metin" id="d-dinamik-metin">Yükleniyor...</div>
         <button class="d-kapat" onclick="duyuruyuKapat()">Okudum, Anladım</button>
     </div>
 </div>
 
 <script>
-    // 👑 https://docs.google.com/spreadsheets/d/e/2PACX-1vRUf9XXzSF12ICpSsLKPskW1MFOsaTfD5T8gmQbAD68zLp7UeVlNGPJ7Jv2IIZh1vFLTZgaCjGFP15F/pubhtml?gid=580897210&single=true neresi tablo ıd? (Sonu output=csv olsun diye ekleme yaptım):
-    const DUYURU_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRUf9XXzSF12ICpSsLKPskW1MFOsaTfD5T8gmQbAD68zLp7UeVlNGPJ7Jv2IIZh1vFLTZgaCjGFP15F/pub?gid=580897210&single=true&output=csv";
+    // 👑 2. ADIMDA ALDIĞIN "CSV" LİNKİNİ BURAYA YAPIŞTIR:
+    const DUYURU_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRUf9XXzSF12ICpSsLKPskW1MFOsaTfD5T8gmQbAD68zLp7UeVlNGPJ7Jv2IIZh1vFLTZgaCjGFP15F/pub?gid=580897210&single=true&output=csv";
 
-    async function duyuruGetir() {
+    async function duyuruBaslat() {
+        if(!DUYURU_CSV_URL || DUYURU_CSV_URL.includes("BURAYA")) return;
+        
         try {
-            const response = await fetch(DUYURU_URL);
-            const data = await response.text();
+            const response = await fetch(DUYURU_CSV_URL);
+            const csvData = await response.text();
             
-            // CSV verisini parçalıyoruz
-            const satirlar = data.split('\n');
+            // CSV satırlarını güvenli şekilde parçalayan regex
+            const satirlar = csvData.split(/\r?\n/);
             if (satirlar.length > 1) {
-                const sonSatir = satirlar[satirlar.length - 1].split(',');
-                
-                // Eğer son satır boşsa bir öncekine bak
-                const veriSatiri = sonSatir.length >= 2 ? sonSatir : satirlar[satirlar.length - 2].split(',');
-                
-                const dNo = "D_" + veriSatiri.replace(/"/g, "").trim();
-                const dMetin = veriSatiri.slice(1).join(',').replace(/"/g, "").replace(/\\n/g, '\n').trim();
-                const okunan = localStorage.getItem('kHafiza');
+                // En son dolu satırı bul
+                const sonDoluSatir = satirlar.filter(s => s.trim() !== "").pop();
+                // Virgülle ayır ama tırnak içindeki virgüllere dokunma
+                const sutunlar = sonDoluSatir.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
 
-                if (okunan !== dNo && dNo !== "D_") {
-                    document.getElementById('d-dinamik-metin').innerText = dMetin;
-                    document.getElementById('k-duyuru').setAttribute('data-id', dNo);
-                    document.getElementById('k-duyuru').style.display = 'flex';
+                if (sutunlar && sutunlar.length >= 2) {
+                    const dNo = "D_" + sutunlar.replace(/"/g, "").trim();
+                    let dMetin = sutunlar.replace(/^"|"$/g, "").replace(/""/g, '"').trim();
+                    
+                    const okunan = localStorage.getItem('kHafiza');
+
+                    if (okunan !== dNo && dNo !== "D_") {
+                        document.getElementById('d-dinamik-metin').innerHTML = dMetin;
+                        document.getElementById('k-duyuru').setAttribute('data-id', dNo);
+                        document.getElementById('k-duyuru').style.display = 'flex';
+                    }
                 }
             }
-        } catch (e) { console.log("Hata:", e); }
+        } catch (err) { console.error("Duyuru çekilemedi:", err); }
     }
 
     function duyuruyuKapat() {
@@ -749,7 +756,7 @@
         document.getElementById('k-duyuru').style.display = 'none';
     }
 
-    duyuruGetir();
+    duyuruBaslat();
 </script>
 </body>
 </html>
