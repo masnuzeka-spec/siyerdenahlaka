@@ -217,6 +217,22 @@
         
         }
     </style>
+    <style>
+.k-btn{flex:1;background:transparent;border:none;border-bottom:3px solid rgba(226,185,115,0.2);color:#a38a70;padding:15px 5px;font-family:'Cinzel',serif;font-size:1.1rem;cursor:pointer;transition:all 0.3s;font-weight:bold}
+.k-btn:hover{color:var(--text-gold, #e2b973);background:rgba(226,185,115,0.05)}
+.k-btn.aktif{color:var(--text-gold, #e2b973);border-bottom:3px solid var(--text-gold, #e2b973);background:rgba(226,185,115,0.1)}
+.k-ic{display:none;padding-top:25px;animation:fadeIn 0.5s}
+.k-ic.aktif{display:block}
+.u-o{list-style-type:none;padding-left:0;line-height:1.8}
+.u-o li{margin-bottom:12px}
+.u-a{list-style-type:none;padding-left:0;line-height:1.8;color:#e8ded1}
+.u-a li{margin-bottom:15px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:10px}
+.s-aciklama{display:none;margin-top:15px;padding:15px;background:rgba(226,185,115,0.1);border-left:4px solid var(--text-gold, #e2b973);border-radius:0 8px 8px 0;font-size:0.95rem;color:#d1bfae;font-style:italic}
+.secenek{display:block;margin-bottom:8px}
+.a-kutu{background:rgba(226,185,115,0.08);padding:20px;border-radius:10px;border:1px dashed var(--text-gold, #e2b973)}
+@media screen and (max-width:768px){.k-btn{font-size:0.85rem;padding:10px 2px}.a-kutu{padding:12px}}
+@keyframes fadeIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
+</style>
 </head>
 <body>
 
@@ -759,6 +775,30 @@
         localStorage.setItem('kHafiza', kutu.getAttribute('data-id'));
         kutu.style.display = 'none';
     }
+</script>
+<script>
+    let k_dokunmaBaslangic = 0;
+    
+    document.addEventListener('touchstart', function(e) {
+        k_dokunmaBaslangic = e.changedTouches.screenX;
+    }, {passive: true});
+
+    document.addEventListener('touchend', function(e) {
+        let k_dokunmaBitis = e.changedTouches.screenX;
+        let alan = e.target.closest('.kral-sekme-alan');
+        
+        if(alan) {
+            let hassasiyet = 50; 
+            let butonlar = Array.from(alan.querySelectorAll('.k-btn'));
+            let aktifSira = butonlar.findIndex(b => b.classList.contains('aktif'));
+
+            if(k_dokunmaBaslangic - k_dokunmaBitis > hassasiyet) {
+                if(aktifSira < butonlar.length - 1) butonlar[aktifSira + 1].click();
+            } else if(k_dokunmaBitis - k_dokunmaBaslangic > hassasiyet) {
+                if(aktifSira > 0) butonlar[aktifSira - 1].click();
+            }
+        }
+    }, {passive: true});
 </script>
 </body>
 </html>
