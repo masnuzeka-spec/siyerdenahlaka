@@ -781,38 +781,51 @@
 document.addEventListener('DOMContentLoaded', () => {
     let k_startX = 0;
     let k_startY = 0;
+    let k_alan = null;
 
+    // Ekrana ilk dokunuş anında ders kutusunu hafızaya kilitler
     document.addEventListener('touchstart', (e) => {
-        k_startX = e.touches.clientX;
-        k_startY = e.touches.clientY;
+        k_alan = e.target.closest('.kral-sekme-alan');
+        if(k_alan) {
+            k_startX = e.touches.clientX;
+            k_startY = e.touches.clientY;
+        }
     }, {passive: true});
 
+    // Parmak ekrandan kalktığında
     document.addEventListener('touchend', (e) => {
+        if (!k_alan) return; // Ders kutusu dışında kaydırıldıysa umursama
+
         let k_endX = e.changedTouches.clientX;
         let k_endY = e.changedTouches.clientY;
 
         let farkX = k_startX - k_endX;
         let farkY = k_startY - k_endY;
 
-        // EĞER AŞAĞI/YUKARI KAYDIRMA DAHA BÜYÜKSE HİÇBİR ŞEY YAPMA (Sayfayı okuyordur)
-        if (Math.abs(farkY) > Math.abs(farkX)) return;
+        // Adam aşağı/yukarı doğru dersi okuyorsa sekme değiştirme!
+        if (Math.abs(farkY) > Math.abs(farkX)) {
+            k_alan = null; 
+            return;
+        }
 
-        // KAYDIRMA ÇOK HAFİFSE İŞLEM YAPMA (Yanlışlıkla dokunmuştur)
-        if (Math.abs(farkX) < 40) return;
+        // Kaydırma çok hafifse (yanlışlıkla dokunduysa) işlem yapma
+        if (Math.abs(farkX) < 30) {
+            k_alan = null; 
+            return;
+        }
 
-        let alan = e.target.closest('.kral-sekme-alan');
-        if (!alan) return;
-
-        let butonlar = Array.from(alan.querySelectorAll('.k-btn'));
+        let butonlar = Array.from(k_alan.querySelectorAll('.k-btn'));
         let aktifSira = butonlar.findIndex(b => b.classList.contains('aktif'));
 
         if (farkX > 0) { 
-            // PARMAK SOLA KAYDI (İleri - Sağdaki Sekmeye Geç)
+            // Parmak SOLA kaydı -> Sağdaki (Sonraki) Sekmeye Geç
             if (aktifSira < butonlar.length - 1) butonlar[aktifSira + 1].click();
         } else { 
-            // PARMAK SAĞA KAYDI (Geri - Soldaki Sekmeye Geç)
+            // Parmak SAĞA kaydı -> Soldaki (Önceki) Sekmeye Dön
             if (aktifSira > 0) butonlar[aktifSira - 1].click();
         }
+        
+        k_alan = null; // İşlem bitince hafızayı sıfırla ki diğer kaydırmalara hazır olsun
     }, {passive: true});
 });
 </script>
