@@ -777,24 +777,42 @@
     }
 </script>
 <script>
-    let k_dokunmaBaslangic = 0;
+    let k_startX = 0;
+    let k_startY = 0;
     
+    // Ekrana ilk dokunulan an
     document.addEventListener('touchstart', function(e) {
-        k_dokunmaBaslangic = e.changedTouches.screenX;
+        k_startX = e.changedTouches.screenX;
+        k_startY = e.changedTouches.screenY;
     }, {passive: true});
 
+    // Parmak ekrandan kalktığı an
     document.addEventListener('touchend', function(e) {
-        let k_dokunmaBitis = e.changedTouches.screenX;
+        let k_endX = e.changedTouches.screenX;
+        let k_endY = e.changedTouches.screenY;
+        
+        // Parmağın ne kadar sağa/sola ve aşağı/yukarı gittiğini hesapla
+        let farkX = k_startX - k_endX;
+        let farkY = k_startY - k_endY;
+        
+        // 👑 KRAL DOKUNUŞ: Eğer dikey kaydırma (okuma), yatay kaydırmadan büyükse İPTAL ET.
+        // Bu sayede adam metni okurken yanlışlıkla sekme değişmez.
+        if (Math.abs(farkY) > Math.abs(farkX)) return; 
+        
+        // Sadece bizim ders kutusunun içinde mi kaydırdı kontrol et
         let alan = e.target.closest('.kral-sekme-alan');
         
         if(alan) {
-            let hassasiyet = 50; 
+            let hassasiyet = 45; // Telefon ekranında hafif bir parmak darbesi yeterli
             let butonlar = Array.from(alan.querySelectorAll('.k-btn'));
             let aktifSira = butonlar.findIndex(b => b.classList.contains('aktif'));
 
-            if(k_dokunmaBaslangic - k_dokunmaBitis > hassasiyet) {
+            // Sola Kaydırma (Bir sonraki sekmeye geç)
+            if(farkX > hassasiyet) { 
                 if(aktifSira < butonlar.length - 1) butonlar[aktifSira + 1].click();
-            } else if(k_dokunmaBitis - k_dokunmaBaslangic > hassasiyet) {
+            } 
+            // Sağa Kaydırma (Bir önceki sekmeye dön)
+            else if(farkX < -hassasiyet) { 
                 if(aktifSira > 0) butonlar[aktifSira - 1].click();
             }
         }
