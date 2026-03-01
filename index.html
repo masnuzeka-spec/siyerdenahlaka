@@ -234,6 +234,15 @@
 @media screen and (max-width:768px){.k-btn{font-size:0.85rem;padding:10px 2px}.a-kutu{padding:12px}}
 @keyframes fadeIn{from{opacity:0;transform:translateX(15px)}to{opacity:1;transform:translateX(0)}}
 </style>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "be7fe2ba-ccb1-4e89-8228-afb252df91b0",
+    });
+  });
+</script>
 </head>
 <body>
 
