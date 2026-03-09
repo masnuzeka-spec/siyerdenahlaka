@@ -721,5 +721,65 @@
         kutu.style.display = 'none';
     }
 </script>
+<style>
+  .radar-kutu {
+    background: #fdfbf7;
+    padding: 15px;
+    border-bottom: 2px solid #a38a70;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 15px;
+  }
+  .radar-input {
+    width: 90%;
+    max-width: 400px;
+    padding: 10px 20px;
+    border: 2px solid #a38a70;
+    border-radius: 25px;
+    font-family: inherit;
+    font-size: 1rem;
+    outline: none;
+    color: #333;
+    transition: all 0.3s ease;
+  }
+  .radar-input:focus {
+    border-color: #2ecc71; /* Zümrüt yeşili parlama */
+    box-shadow: 0 0 8px rgba(46,204,113,0.3);
+  }
+</style>
+
+<script>
+  // Sayfa yüklendiğinde arama kutusunu otomatik olarak en tepeye yerleştirir
+  document.addEventListener("DOMContentLoaded", function() {
+    var sekmeAlani = document.querySelector('.kral-sekme-alan');
+    
+    // Eğer sayfada ders şablonumuz varsa ve arama kutusu henüz eklenmemişse ekle
+    if(sekmeAlani && !document.querySelector('.radar-kutu')) {
+      var radarHtml = '<div class="radar-kutu"><input type="text" id="kralRadar" class="radar-input" placeholder="🔍 Dersin içinde ara (Örn: Tevriye, Bedir)..." onkeyup="radarTarama()"></div>';
+      sekmeAlani.insertAdjacentHTML('afterbegin', radarHtml);
+    }
+  });
+
+  // Arama kutusuna yazı yazıldıkça çalışan canlı filtreleme füzemiz
+  function radarTarama() {
+    var input = document.getElementById('kralRadar').value.toLowerCase();
+    
+    // Notlardaki maddeleri, paragrafları ve testteki soruları hedefe kilitler
+    var hedefler = document.querySelectorAll('.k-ic li, .k-ic p, .soru-kutu');
+
+    hedefler.forEach(function(el) {
+      var metin = el.textContent.toLowerCase();
+      // Yazılan kelime maddede geçiyorsa göster, geçmiyorsa gizle
+      if (metin.includes(input)) {
+        el.style.display = "";
+      } else {
+        el.style.display = "none";
+      }
+    });
+  }
+</script>
 </body>
 </html>
