@@ -722,63 +722,185 @@
     }
 </script>
 <style>
-  .radar-kutu {
-    background: #fdfbf7;
-    padding: 15px;
-    border-bottom: 2px solid #a38a70;
-    text-align: center;
-    position: sticky;
-    top: 0;
-    z-index: 999;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    margin-bottom: 15px;
+  /* === TEMEL RADAR TASARIMI === */
+  :root {
+    --radar-ana: #a38a70; /* Kahve/Altın */
+    --radar-bg: rgba(253, 251, 247, 0.95);
+    --radar-metin: #333;
+    --radar-zumrut: #2ecc71;
   }
-  .radar-input {
+
+  /* === KOYU TEMA UYUMU (Otomatik) === */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --radar-ana: #e2b973; /* Daha parlak altın */
+      --radar-bg: rgba(20, 20, 20, 0.95);
+      --radar-metin: #fdfbf7;
+    }
+  }
+  
+  /* Sitede özel bir dark-mode klası varsa (Örn: body.dark) buraya ekleyebilirsin */
+  body.dark-mode {
+      --radar-ana: #e2b973;
+      --radar-bg: rgba(20, 20, 20, 0.95);
+      --radar-metin: #fdfbf7;
+  }
+
+  /* Radar Butonu (Sabit Büyüteç) */
+  .radar-tetikleyici {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: var(--radar-ana);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 1000;
+    transition: all 0.3s ease;
+    border: none;
+    outline: none;
+  }
+  .radar-tetikleyici:hover {
+    transform: scale(1.1);
+    background: var(--radar-zumrut);
+  }
+
+  /* Arama Paneli (Gizli Başlar) */
+  .radar-paneli {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 1001;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 50px;
+    backdrop-filter: blur(5px);
+  }
+  
+  /* Panel Açık Klası */
+  .radar-paneli.aktif {
+    display: flex;
+  }
+
+  /* Panel İçindeki Kutu */
+  .radar-kutu {
+    background: var(--radar-bg);
     width: 90%;
-    max-width: 400px;
-    padding: 10px 20px;
-    border: 2px solid #a38a70;
+    max-width: 500px;
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px solid var(--radar-ana);
+    box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+    position: relative;
+    text-align: center;
+  }
+
+  /* Arama Input Alanı */
+  .radar-input {
+    width: 100%;
+    padding: 12px 20px;
+    border: 2px solid var(--radar-ana);
     border-radius: 25px;
     font-family: inherit;
-    font-size: 1rem;
+    font-size: 1.1rem;
     outline: none;
-    color: #333;
+    color: var(--radar-metin);
+    background: transparent;
     transition: all 0.3s ease;
+    box-sizing: border-box;
   }
   .radar-input:focus {
-    border-color: #2ecc71; 
-    box-shadow: 0 0 8px rgba(46,204,113,0.3);
+    border-color: var(--radar-zumrut);
+  }
+  
+  /* Kapatma Butonu (X) */
+  .radar-kapat {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 20px;
+    color: var(--radar-ana);
+    cursor: pointer;
+    font-weight: bold;
   }
 </style>
 
 <script>
-  // AVCI FÜZE: Dersin sayfaya yüklenmesini bekler ve yüklenince arama kutusunu çakar!
-  var radarAvcisi = setInterval(function() {
+  // AVCI FÜZE: Dersin sayfaya yüklenmesini bekler ve Minimalist Merceği çakar!
+  var radarAvcisiV2 = setInterval(function() {
     var sekmeAlani = document.querySelector('.kral-sekme-alan');
     
     // Hedef (Ders alanı) ekranda belirdi mi?
     if (sekmeAlani) { 
-      // Radar henüz eklenmediyse ekle
-      if (!document.querySelector('.radar-kutu')) { 
-        var radarHtml = '<div class="radar-kutu"><input type="text" id="kralRadar" class="radar-input" placeholder="🔍 Dersin içinde ara (Örn: Bedir)..." onkeyup="radarTarama()"></div>';
-        sekmeAlani.insertAdjacentHTML('afterbegin', radarHtml);
+      // Mercek henüz eklenmediyse ekle
+      if (!document.querySelector('.radar-tetikleyici')) { 
+        // 1. Mercek Butonunu Ekle
+        var mercekHtml = '<button class="radar-tetikleyici" id="radarBtn" onclick="toggleRadar()">🔍</button>';
+        document.body.insertAdjacentHTML('beforeend', mercekHtml);
+        
+        // 2. Gizli Arama Panelini Ekle
+        var panelHtml = '<div class="radar-paneli" id="radarPaneli" onclick="kapat(event)"><div class="radar-kutu"><span class="radar-kapat" onclick="toggleRadar()">×</span><h3 style="color:var(--radar-ana); margin-top:0; font-family:\'Cinzel\',serif;">Ders Notlarında Ara</h3><input type="text" id="kralRadarInput" class="radar-input" placeholder="Kelimeyi yaz (Örn: Merhamet, Bedir)..." onkeyup="radarTaramaV2()"></div></div>';
+        document.body.insertAdjacentHTML('beforeend', panelHtml);
       }
-      clearInterval(radarAvcisi); // Radarı yerleştirdik, sürekli aramayı durdur.
+      clearInterval(radarAvcisiV2); // Merceği yerleştirdik, sentinel durabilir.
     }
-  }, 500); // Her yarım saniyede bir kontrol et
+  }, 500);
 
-  // Arama kutusuna yazı yazıldıkça çalışan canlı filtreleme füzemiz
-  function radarTarama() {
-    var input = document.getElementById('kralRadar').value.toLowerCase();
+  // Paneli açıp kapatan komut
+  function toggleRadar() {
+    document.getElementById('radarPaneli').classList.toggle('aktif');
+    // Panel açıldığında inputa otomatik odaklan
+    if(document.getElementById('radarPaneli').classList.contains('aktif')){
+        setTimeout(()=> document.getElementById('kralRadarInput').focus(), 200);
+    }
+  }
+  
+  // Dışarı tıklayınca kapatma
+  function kapat(e) {
+      if (e.target.id === 'radarPaneli') {
+          toggleRadar();
+      }
+  }
+
+  // === CANLI KESKİN NİŞANCI FİLTRELEME (GÜNCELLENMİŞ MENZİL) ===
+  function radarTaramaV2() {
+    var input = document.getElementById('kralRadarInput').value.toLowerCase();
     
-    // Özet maddeleri, paragrafları, altın notları ve test sorularını hedefe kilitler
-    var hedefler = document.querySelectorAll('.k-ic li, .k-ic p, .soru-kutu, .u-a li');
+    // YENİ MENZİL: 
+    // 1. Özet maddeleri (.u-o li)
+    // 2. Özet paragrafları (.k-ic p)
+    // 3. Altın Notlar maddeleri (.u-a li)
+    // 4. Test soruları (.soru-kutu)
+    var hedefler = document.querySelectorAll('.k-ic li, .k-ic p, .soru-kutu, .u-a li, h4.ozet-baslik');
+
+    // Hedef yoksa arama yapma (Test aşaması için güvenlik)
+    if(input === "") {
+         hedefler.forEach(el => el.style.display = "");
+         return;
+    }
 
     hedefler.forEach(function(el) {
       var metin = el.textContent.toLowerCase();
+      
       // Yazılan kelime maddede geçiyorsa göster, geçmiyorsa gizle
       if (metin.includes(input)) {
         el.style.display = "";
+        
+        // Eğer madde bir test sorusuysa, testin başlığını da göster
+        if(el.classList.contains('soru-kutu')){
+             el.parentElement.querySelector('h3').style.display = "";
+        }
       } else {
         el.style.display = "none";
       }
