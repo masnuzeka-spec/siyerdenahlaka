@@ -746,29 +746,33 @@
     transition: all 0.3s ease;
   }
   .radar-input:focus {
-    border-color: #2ecc71; /* Zümrüt yeşili parlama */
+    border-color: #2ecc71; 
     box-shadow: 0 0 8px rgba(46,204,113,0.3);
   }
 </style>
 
 <script>
-  // Sayfa yüklendiğinde arama kutusunu otomatik olarak en tepeye yerleştirir
-  document.addEventListener("DOMContentLoaded", function() {
+  // AVCI FÜZE: Dersin sayfaya yüklenmesini bekler ve yüklenince arama kutusunu çakar!
+  var radarAvcisi = setInterval(function() {
     var sekmeAlani = document.querySelector('.kral-sekme-alan');
     
-    // Eğer sayfada ders şablonumuz varsa ve arama kutusu henüz eklenmemişse ekle
-    if(sekmeAlani && !document.querySelector('.radar-kutu')) {
-      var radarHtml = '<div class="radar-kutu"><input type="text" id="kralRadar" class="radar-input" placeholder="🔍 Dersin içinde ara (Örn: Tevriye, Bedir)..." onkeyup="radarTarama()"></div>';
-      sekmeAlani.insertAdjacentHTML('afterbegin', radarHtml);
+    // Hedef (Ders alanı) ekranda belirdi mi?
+    if (sekmeAlani) { 
+      // Radar henüz eklenmediyse ekle
+      if (!document.querySelector('.radar-kutu')) { 
+        var radarHtml = '<div class="radar-kutu"><input type="text" id="kralRadar" class="radar-input" placeholder="🔍 Dersin içinde ara (Örn: Bedir)..." onkeyup="radarTarama()"></div>';
+        sekmeAlani.insertAdjacentHTML('afterbegin', radarHtml);
+      }
+      clearInterval(radarAvcisi); // Radarı yerleştirdik, sürekli aramayı durdur.
     }
-  });
+  }, 500); // Her yarım saniyede bir kontrol et
 
   // Arama kutusuna yazı yazıldıkça çalışan canlı filtreleme füzemiz
   function radarTarama() {
     var input = document.getElementById('kralRadar').value.toLowerCase();
     
-    // Notlardaki maddeleri, paragrafları ve testteki soruları hedefe kilitler
-    var hedefler = document.querySelectorAll('.k-ic li, .k-ic p, .soru-kutu');
+    // Özet maddeleri, paragrafları, altın notları ve test sorularını hedefe kilitler
+    var hedefler = document.querySelectorAll('.k-ic li, .k-ic p, .soru-kutu, .u-a li');
 
     hedefler.forEach(function(el) {
       var metin = el.textContent.toLowerCase();
